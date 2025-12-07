@@ -1,0 +1,26 @@
+# Python
+backend/venv/
+**/__pycache__/
+*.pyc
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# DeepPurpose / ML models / caches
+backend/save_folder/
+backend/save_folder/**
+*.pt
+*.pth
+*.bin
+*.h5
+
+# OS / editor stuff
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env / secrets
+*.env
+.env.*
