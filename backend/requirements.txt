@@ -10,4 +10,8 @@ sqlalchemy
 rdkit-pypi
 transformers
 python-arango==8.2.3
+faiss-cpu
+sentence-transformers
+faiss-cpu
+sentence-transformers
 
