@@ -1,7 +1,8 @@
-# Python
+# Python venv
 backend/venv/
-**/__pycache__/
-*.pyc
+# Bytecode
+__pycache__/
+*.py[cod]
 
 # Node / React
 frontend/node_modules/
@@ -10,10 +11,16 @@ frontend/dist/
 # DeepPurpose / ML models / caches
 backend/save_folder/
 backend/save_folder/**
+backend/faiss_index.index
+backend/faiss_id_map.npy
+backend/faiss_index.lock
 *.pt
 *.pth
 *.bin
 *.h5
+
+# Local DBs
+backend/*.db
 
 # OS / editor stuff
 .DS_Store
@@ -24,3 +31,8 @@ Thumbs.db
 # Env / secrets
 *.env
 .env.*
+backend/.env
+
+# Optional
+pytest_cache/
+*.log

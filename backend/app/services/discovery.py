@@ -12,6 +12,7 @@ from .scoring import get_scorer
 from .generation import get_generator
 from .kg import attach_run_to_kg
 from .admet import calculate_admet
+from .faiss_index import add_to_index, query_index
 
 
 scorer = get_scorer()
@@ -225,9 +226,68 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
     except Exception as e:
         # do not break discovery run if Arango is down; just log
         import logging
-        logging.exception("Failed to write to Arango KG: %s", e)
+        logging.exception("Failed to write to Arango KG: %s", e) 
+    # ---------- Faiss: query semantic neighbors (before adding new vectors) ----------
+    # Note: query_index and add_to_index are imported at module top:
+    # from .faiss_index import add_to_index, query_index
 
-         
+    try:
+        # For each generated molecule, try to find a semantic neighbor from the existing index
+        for idx, m in enumerate(molecules):
+            try:
+                neighs = query_index(m.smiles, k=5)
+                # find first neighbor that belongs to 'drugs' collection
+                sem_neighbor = None
+                for item in neighs:
+                    coll, key = item["id"]
+                    if coll == "drugs":
+                        sem_neighbor = {"name": key, "semantic_similarity": item["score"]}
+                        break
+                if sem_neighbor:
+                    # attach semantic neighbor into Molecule object (so response includes it)
+                    try:
+                        from ..schemas import SimilarDrug  # safe local import if not at top
+                    except Exception:
+                        SimilarDrug = None
+
+                    if SimilarDrug is not None:
+                        m.similar_drug_semantic = SimilarDrug(
+                            name=sem_neighbor["name"],
+                            smiles=None,
+                            indication=None,
+                            similarity=None,
+                            semantic_similarity=float(sem_neighbor["semantic_similarity"]),
+                        )
+
+                    # optionally create an Arango edge (idempotent attempt)
+                    try:
+                        # deterministic edge key could be used to avoid duplicates (optional)
+                        similar_col.insert({
+                            "_from": f"molecules/{run_key}_{idx}",
+                            "_to": f"drugs/{sem_neighbor['name']}",
+                            "semantic": float(sem_neighbor["semantic_similarity"])
+                        })
+                    except Exception:
+                        # ignore duplicate or missing-drug errors
+                        pass
+            except Exception:
+                # ignore per-molecule Faiss/query errors
+                continue
+
+        # After querying semantic neighbors, append new molecule vectors to the Faiss index
+        try:
+            new_smiles = [m.smiles for m in molecules]
+            new_ids = [("molecules", f"{run_key}_{i}") for i in range(len(molecules))]
+            add_to_index(new_smiles, new_ids)
+        except Exception as e:
+            import logging
+            logging.exception("Faiss add failed: %s", e)
+    except Exception:
+        # any higher-level Faiss orchestration error should not break discovery
+        import logging
+        logging.exception("Faiss orchestration failed.")
+    
+        
 
     # 6) Return response
     return DiscoveryResponse(
