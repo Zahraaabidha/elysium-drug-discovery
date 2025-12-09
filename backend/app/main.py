@@ -19,6 +19,7 @@ from .db import Base, engine, get_db
 from . import models  # ensure models are imported so metadata knows them
 from .similarity import find_combined_similar_drugs
 from .services.kg import get_target_graph, get_drug_graph
+from .services.kg_routes import router as kg_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -36,6 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(kg_router)
 
 @app.get("/health")
 def health_check():
