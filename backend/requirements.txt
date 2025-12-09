@@ -9,3 +9,5 @@ git+https://github.com/bp-kelley/descriptastorus
 sqlalchemy
 rdkit-pypi
 transformers
+python-arango==8.2.3
+
