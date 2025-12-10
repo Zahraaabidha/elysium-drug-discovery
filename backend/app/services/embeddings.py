@@ -6,7 +6,7 @@ to embed SMILES into a vector space and compute semantic similarity
 to a small library of known drugs.
 """
 
-from typing import List, Optional, Tuple, Iterable
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -120,27 +120,3 @@ def find_most_semantic_drug(smiles: str) -> Optional[SimilarDrug]:
     chemBERTa-nearest known drug.
     """
     return embedder.most_similar_drug(smiles)
-
-def embed_smiles(smiles_list: Iterable[str]) -> np.ndarray:
-    """
-    Return a numpy array shape (N, D) of normalized float32 embeddings for the
-    given list of SMILES. Raises RuntimeError if embedding fails for any SMILES.
-    """
-    if not hasattr(embedder, "_available") or not embedder._available:
-        raise RuntimeError("ChemBERTa embedder is not available (failed to load model).")
-
-    vectors = []
-    failed = []
-    for s in smiles_list:
-        v = embedder._smiles_to_embedding(s)
-        if v is None:
-            failed.append(s)
-        else:
-            vectors.append(v)
-
-    if failed:
-        # Be strict — prefer to fail loudly so caller can handle it.
-        raise RuntimeError(f"Failed to compute embeddings for SMILES: {failed!r}")
-
-    arr = np.vstack(vectors).astype("float32")
-    return arr
