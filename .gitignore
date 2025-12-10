@@ -24,3 +24,14 @@ Thumbs.db
 # Env / secrets
 *.env
 .env.*
+
+# Local SQLite DB
+backend/elysium.db
+backend/elysium.db.bak
+
+# FAISS / backend runtime artifacts
+backend/backend/
+backend/backend/**
+backend/faiss_index.index
+backend/faiss_id_map.npy
+
