@@ -8,39 +8,57 @@ from sqlalchemy import (
     Float,
     DateTime,
     ForeignKey,
+    String,
+    Boolean,
     Text,
 )
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import func
 from .db import Base
 
+def gen_uuid():
+    return str(uuid.uuid4())
 
 class DiscoveryRun(Base):
     __tablename__ = "discovery_runs"
 
-    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
-    target_id = Column(String, index=True, nullable=False)
-    num_molecules = Column(Integer, nullable=False)
-    created_at = Column(DateTime, default=dt.datetime.utcnow)
+    id = Column(String, primary_key=True, default=gen_uuid)
+    target_id = Column(String, nullable=False)
+    num_molecules = Column(Integer, nullable=False, default=0)
 
+    # status/progress fields (if present in your schema)
+    status = Column(String, nullable=False, default="queued")
+    progress = Column(Float, nullable=False, default=0.0)
+    cancelled = Column(Boolean, nullable=False, default=False)
+    error_message = Column(Text, nullable=True)
+    attempts = Column(Integer, nullable=False, default=0)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # ====== THIS is the expected property name: 'molecules' ======
     molecules = relationship(
         "MoleculeRecord",
         back_populates="run",
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
-
 
 class MoleculeRecord(Base):
     __tablename__ = "molecules"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    run_id = Column(String, ForeignKey("discovery_runs.id"), index=True, nullable=False)
-    smiles = Column(String, index=True, nullable=False)
-    score = Column(Float, nullable=False)
-    source = Column(String, nullable=False)
-    notes = Column(Text)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(String, ForeignKey("discovery_runs.id"), nullable=False)
+    smiles = Column(String, nullable=False)
+    score = Column(Float, nullable=True)
+    source = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # ====== THIS must match the DiscoveryRun relationship back_populates ======
     run = relationship("DiscoveryRun", back_populates="molecules")
+
 
 class KGNode(Base):
     __tablename__ = "kg_nodes"

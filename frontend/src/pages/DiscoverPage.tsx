@@ -22,17 +22,20 @@ const DiscoverPage: React.FC = () => {
     setResults([]);
 
     try {
-      const data = await discoverMolecules({
+      // Directly get final results from /discover
+      const response = await discoverMolecules({
         target_id: targetId,
         num_molecules: numMolecules,
         lipinski_only: lipinskiOnly,
       });
-      setRunId(data.run_id);
-      setResults(data.molecules);
+
+      setRunId(response.run_id);
+      setResults(response.molecules ?? []);
     } catch (err: any) {
       console.error(err);
       setError(
         err?.response?.data?.detail ??
+          err?.message ??
           "Failed to run discovery. Check if backend is running."
       );
     } finally {
@@ -113,12 +116,12 @@ const DiscoverPage: React.FC = () => {
 
             {runId && (
               <p className="text-xs text-slate-400 mt-1">
-                Run ID: {" "}
+                Run ID:{" "}
                 <Link
                   to={`/runs/${runId}`}
                   className="text-sky-400 hover:text-sky-300"
                 >
-                    {runId}
+                  {runId}
                 </Link>
               </p>
             )}

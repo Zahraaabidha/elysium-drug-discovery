@@ -36,3 +36,22 @@ backend/.env
 # Optional
 pytest_cache/
 *.log
+
+# Databases
+*.db
+*.db.bak
+
+# FAISS artifacts
+*.index
+*.npy
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Node
+node_modules/
+
+# Docker volumes
+data/

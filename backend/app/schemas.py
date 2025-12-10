@@ -8,15 +8,17 @@ class DiscoveryRequest(BaseModel):
     num_molecules: int = Field(..., ge=1, le=100)
     lipinski_only: bool = False
 
+
 class ADMETProperties(BaseModel):
     molecular_weight: float
     logp: float
-    hbd: int   # hydrogen bond donors
-    hba: int   # hydrogen bond acceptors
+    hbd: int  # hydrogen bond donors
+    hba: int  # hydrogen bond acceptors
     rotatable_bonds: int
     tpsa: float
     lipinski_violations: int
     lipinski_pass: bool
+
 
 class SimilarDrug(BaseModel):
     name: str
@@ -24,6 +26,7 @@ class SimilarDrug(BaseModel):
     indication: Optional[str] = None
     similarity: float
     semantic_similarity: Optional[float] = None  # chemBERTa cosine (0–1)
+
 
 class Molecule(BaseModel):
     smiles: str
@@ -35,12 +38,12 @@ class Molecule(BaseModel):
     admet: Optional[ADMETProperties] = None
 
 
-
 class DiscoveryResponse(BaseModel):
     run_id: str
     target_id: str
     num_molecules: int
     molecules: List[Molecule]
+
 
 class DiscoveryRunSummary(BaseModel):
     run_id: str
@@ -50,7 +53,8 @@ class DiscoveryRunSummary(BaseModel):
 
 
 class DiscoveryRunListResponse(BaseModel):
-    runs: List[DiscoveryRunSummary]    
+    runs: List[DiscoveryRunSummary]
+
 
 class MoleculeGraphEntry(BaseModel):
     run_id: str
@@ -63,6 +67,7 @@ class MoleculeGraphEntry(BaseModel):
 class TargetGraphResponse(BaseModel):
     target_id: str
     molecules: List[MoleculeGraphEntry]
+
 
 class DrugGraphEntry(BaseModel):
     target_id: str

@@ -4,32 +4,27 @@ services:
     image: arangodb/arangodb:3.11.7
     container_name: elysium_arangodb
     environment:
-      ARANGO_ROOT_PASSWORD: changeme   # or from file
+      - ARANGO_ROOT_PASSWORD=changeme
     ports:
       - "8529:8529"
     volumes:
       - arango_data:/var/lib/arangodb3
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8529/_api/version"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8529/_api/version || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
     container_name: elysium_backend
-    depends_on:
-      arangodb:
-        condition: service_healthy
     env_file:
-      - backend/.env           # local env file (do NOT commit)
+      - backend/.env
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app  # mount code for live reload
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    depends_on:        # <--- IMPORTANT: list syntax with "-"
+      - arangodb
 
 # optional: redis (for Celery), worker
 #  redis:

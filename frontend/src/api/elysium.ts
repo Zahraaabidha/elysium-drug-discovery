@@ -1,5 +1,7 @@
 // src/api/elysium.ts
-import { apiClient } from "./client";
+import { apiClient, runDiscovery } from "./client";
+
+/* ---------- core discovery types ---------- */
 
 export interface ADMET {
   molecular_weight: number;
@@ -89,10 +91,11 @@ export interface DrugGraphResponse {
 export async function discoverMolecules(
   payload: DiscoverRequest
 ): Promise<DiscoverResponse> {
-  const { data } = await apiClient.post<DiscoverResponse>(
-    "/discover",
-    payload
-  );
+  // Uses the job-based flow defined in client.ts:
+  // 1) POST /discover
+  // 2) Poll /jobs/{run_id}
+  // 3) GET /runs/{run_id} to fetch final molecules
+  const data = await runDiscovery(payload);
   return data;
 }
 
