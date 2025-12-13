@@ -72,6 +72,7 @@ const RunDetailPage: React.FC = () => {
                 key={idx}
                 className="border border-slate-800 rounded-lg p-3 bg-slate-950/70 text-sm"
               >
+                {/* Top Row: SMILES + Score */}
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-mono text-xs text-slate-400">
                     {mol.smiles}
@@ -84,6 +85,7 @@ const RunDetailPage: React.FC = () => {
                   </span>
                 </div>
 
+                {/* Similar drug */}
                 {mol.similar_drug && (
                   <p className="text-xs text-slate-300">
                     Similar to{" "}
@@ -95,6 +97,7 @@ const RunDetailPage: React.FC = () => {
                   </p>
                 )}
 
+                {/* ADMET */}
                 {mol.admet && (
                   <p className="text-xs text-slate-400 mt-1">
                     MW {mol.admet.molecular_weight.toFixed(1)} · logP{" "}
@@ -115,11 +118,46 @@ const RunDetailPage: React.FC = () => {
                   </p>
                 )}
 
+                {/* Notes */}
                 {mol.notes && (
                   <p className="text-[11px] text-slate-500 mt-1">
                     {mol.notes}
                   </p>
                 )}
+
+                {/* Molecule Image + Details */}
+                <div className="flex gap-4 mt-3">
+                  <img
+                    src={`http://127.0.0.1:8000/molecule/image?smiles=${encodeURIComponent(
+                      mol.smiles
+                    )}`}
+                    alt="Molecule"
+                    className="w-32 h-32 rounded bg-white border border-slate-700"
+                  />
+
+                  <div className="flex flex-col gap-1">
+                    <div className="font-mono text-sm text-slate-300">
+                      {mol.smiles}
+                    </div>
+
+                    <div className="text-xs text-slate-400">
+                      Score: {mol.score.toFixed(3)}
+                    </div>
+
+                    {mol.admet && (
+                      <div className="text-xs text-slate-400">
+                        Lipinski:{" "}
+                        {mol.admet.lipinski_pass ? (
+                          <span className="text-emerald-300">PASS</span>
+                        ) : (
+                          <span className="text-red-300">
+                            FAIL ({mol.admet.lipinski_violations})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -8,7 +8,7 @@ import os
 # run even if Arango is not set up yet.
 ARANGO_URL = os.getenv("ARANGO_URL", "http://127.0.0.1:8529")
 ARANGO_USERNAME = os.getenv("ARANGO_USERNAME", "root")
-ARANGO_PASSWORD = os.getenv("ARANGO_PASSWORD", "")
+ARANGO_PASSWORD = os.getenv("ARANGO_PASSWORD", "changeme")
 ARANGO_DB_NAME = os.getenv("ARANGO_DB_NAME", "elysium_kg")
 
 

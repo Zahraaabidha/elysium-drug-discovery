@@ -19,6 +19,8 @@ from .db import Base, engine, get_db
 from . import models  # ensure models are imported so metadata knows them
 from .similarity import find_combined_similar_drugs
 from .services.kg import get_target_graph, get_drug_graph
+from app.routes.molecule_image import router as molecule_image_router
+from app.agents.discovery_agent import run_discovery_agent
 
 Base.metadata.create_all(bind=engine)
 
@@ -36,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(molecule_image_router)
 
 @app.get("/health")
 def health_check():
@@ -125,3 +128,7 @@ def discover_molecules(
     db: Session = Depends(get_db),
 ):
     return run_discovery(payload, db)
+
+@app.post("/agent/discover")
+def agent_discover(target_id: str):
+    return run_discovery_agent(target_id)

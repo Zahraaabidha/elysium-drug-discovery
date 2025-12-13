@@ -11,6 +11,7 @@ from .scoring import get_scorer
 from .generation import get_generator
 from .kg import attach_run_to_kg
 from .admet import calculate_admet
+from app.arangodb_client import get_arango_db
 
 
 scorer = get_scorer()
@@ -56,7 +57,15 @@ def _simple_score(smiles_list: List[str], target_sequence: str, target_id: str) 
     return scores
 
 
-def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
+def run_discovery(req, db):
+    if isinstance(req, dict):
+        target_id = req["target_id"]
+        num_molecules = req.get("num_molecules", 5)
+        lipinski_only = req.get("lipinski_only", False)
+    else:
+        target_id = req.target_id
+        num_molecules = req.num_molecules
+        lipinski_only = req.lipinski_only
     """
     ELYSIUM discovery pipeline:
 
@@ -69,14 +78,14 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
     """
 
     # 1) Generate candidate molecules (library-based for now)
-    smiles_list = generator.generate(req.target_id, req.num_molecules)
+    smiles_list = generator.generate(target_id, num_molecules)
 
 
     # 2) Resolve target sequence
-    target_seq = resolve_target_sequence(req.target_id)
+    target_seq = resolve_target_sequence(target_id)
 
     # 3) Score with configured backend
-    scores = scorer.score(smiles_list, target_seq, req.target_id)
+    scores = scorer.score(smiles_list, target_seq, target_id)
 
     # 4) Build Molecule objects with similarity info
     molecules: List[Molecule] = []
@@ -121,7 +130,7 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
         )
 
             # Optional Lipinski filter
-    if req.lipinski_only:
+    if lipinski_only:
         filtered = [
             m for m in molecules
             if m.admet is not None and m.admet.lipinski_pass
@@ -136,7 +145,7 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
 
     # 5) Save to DB (same as before)
     run_record = DiscoveryRun(
-        target_id=req.target_id,
+        target_id=target_id,
         num_molecules=len(molecules),
     )
     db.add(run_record)
@@ -170,7 +179,7 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
             "_key": mol_key,
             "run_id": run_record.id,
             "index": idx,
-            "target_id": req.target_id,
+            "target_id": target_id,
             "smiles": m.smiles,
             "score": m.score,
         })
@@ -178,7 +187,7 @@ def run_discovery(req: DiscoveryRequest, db: Session) -> DiscoveryResponse:
         # molecule BINDS target
         binds_edge.insert({
             "_from": f"molecules/{mol_key}",
-            "_to": f"targets/{req.target_id}",
+            "_to": f"targets/{target_id}",
             "score": m.score,
             "source": "ELYSIUM/DeepPurpose"
         })
